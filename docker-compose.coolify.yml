@@ -1,0 +1,102 @@
+# Automaker - Coolify Deployment with Claude CLI Authentication
+# =============================================================
+#
+# This compose file is configured for Coolify deployment using your
+# Claude Pro/Max subscription via Claude Code CLI authentication.
+#
+# PREREQUISITES (on your Coolify server):
+# 1. SSH into your Coolify server
+# 2. Install Claude CLI: npm install -g @anthropic-ai/claude-code
+# 3. Authenticate: claude login
+# 4. Note the .claude path (check with: ls -la ~/.claude)
+#
+# COOLIFY SETUP:
+# 1. Add this repo as a Docker Compose resource
+# 2. Set the compose file to: docker-compose.coolify.yml
+# 3. Add environment variables in Coolify dashboard
+# 4. Configure persistent storage for /data volume
+# 5. Map your domain to the ui service (port 80)
+
+services:
+  # Frontend UI (Nginx)
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ui
+      args:
+        # Set this to your server's domain/URL in Coolify
+        VITE_SERVER_URL: ${VITE_SERVER_URL:-http://localhost:3008}
+    container_name: automaker-ui
+    restart: unless-stopped
+    ports:
+      - '3007:80'
+    depends_on:
+      server:
+        condition: service_healthy
+
+  # Backend API Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    container_name: automaker-server
+    restart: unless-stopped
+    ports:
+      - '3008:3008'
+    environment:
+      # Claude CLI auth - no API key needed when .claude is mounted
+      # Uncomment below only if you want to use an API key instead
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+
+      # Authentication for Automaker API (recommended for production)
+      - AUTOMAKER_API_KEY=${AUTOMAKER_API_KEY:-}
+
+      # CORS - set to your Coolify domain
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+
+      # Project directory restriction
+      - ALLOWED_ROOT_DIRECTORY=${ALLOWED_ROOT_DIRECTORY:-/projects}
+
+      # Data directory
+      - DATA_DIR=/data
+
+      # Terminal settings
+      - TERMINAL_ENABLED=${TERMINAL_ENABLED:-true}
+      - TERMINAL_PASSWORD=${TERMINAL_PASSWORD:-}
+
+      # GitHub token for git operations (optional)
+      - GH_TOKEN=${GH_TOKEN:-}
+
+      # Logging
+      - ENABLE_REQUEST_LOGGING=${ENABLE_REQUEST_LOGGING:-false}
+
+    volumes:
+      # Persistent data storage
+      - automaker-data:/data
+
+      # Claude CLI authentication (REQUIRED for subscription auth)
+      # Update the host path to match your Coolify server's .claude location
+      # Common paths:
+      #   - /root/.claude (if running as root)
+      #   - /home/ubuntu/.claude (Ubuntu default user)
+      #   - /home/coolify/.claude (if using coolify user)
+      - ${CLAUDE_CONFIG_PATH:-/root/.claude}:/home/automaker/.claude
+
+      # GitHub CLI config (optional, for git push/PR operations)
+      # - ${GH_CONFIG_PATH:-/root/.config/gh}:/home/automaker/.config/gh
+
+      # Git config for user identity (optional)
+      # - ${GITCONFIG_PATH:-/root/.gitconfig}:/home/automaker/.gitconfig:ro
+
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3008/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  automaker-data:
+    name: automaker-data

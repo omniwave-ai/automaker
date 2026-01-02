@@ -52,11 +52,10 @@ In Coolify's environment variables section, add:
 
 ### Recommended
 
-| Variable            | Value                         | Description                             |
-| ------------------- | ----------------------------- | --------------------------------------- |
-| `AUTOMAKER_API_KEY` | `<random-string>`             | API authentication key                  |
-| `TERMINAL_PASSWORD` | `<password>`                  | Protect terminal access                 |
-| `VITE_SERVER_URL`   | `https://api.your-domain.com` | Backend URL (if using separate domains) |
+| Variable            | Value             | Description             |
+| ------------------- | ----------------- | ----------------------- |
+| `AUTOMAKER_API_KEY` | `<random-string>` | API authentication key  |
+| `TERMINAL_PASSWORD` | `<password>`      | Protect terminal access |
 
 ### Optional
 

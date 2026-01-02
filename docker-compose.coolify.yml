@@ -24,9 +24,6 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui
-      args:
-        # Set this to your server's domain/URL in Coolify
-        VITE_SERVER_URL: ${VITE_SERVER_URL:-http://localhost:3008}
     container_name: automaker-ui
     restart: unless-stopped
     ports:

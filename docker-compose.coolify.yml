@@ -24,6 +24,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui
+      args:
+        # REQUIRED: Set this to your API subdomain in Coolify
+        VITE_SERVER_URL: ${VITE_SERVER_URL:-https://api.automaker.omniwave.tech}
     container_name: automaker-ui
     restart: unless-stopped
     ports:
